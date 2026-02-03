@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Games - Gaming Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f5f5;
+        }
+        .navbar {
+            background-color: #667eea;
+        }
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            height: fit-content;
+        }
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .game-image {
+            background: #667eea;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+        .game-info {
+            padding: 20px;
+        }
+        .game-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .game-price {
+            font-size: 1.3rem;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .rating {
+            color: #ffc107;
+            font-size: 0.9rem;
+        }
+        .btn-primary {
+            background: #667eea;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #764ba2;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        .filter-section h5 {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">🎮 Gaming Platform</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search games...">
+                    </div>
+
+                    <div class="filter-section">
+                        <h5>Genre</h5>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="genre" value="">
+                            <label class="form-check-label">All Genres</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="genre" value="RPG">
+                            <label class="form-check-label">RPG</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="genre" value="Action">
+                            <label class="form-check-label">Action</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="genre" value="Adventure">
+                            <label class="form-check-label">Adventure</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="genre" value="Puzzle">
+                            <label class="form-check-label">Puzzle</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-section">
+                        <h5>Sort By</h5>
+                        <select id="sortSelect" class="form-select">
+                            <option value="recent">Most Recent</option>
+                            <option value="rating">Highest Rated</option>
+                            <option value="price">Price: Low to High</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary w-100" onclick="loadGames()">Apply Filters</button>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="row" id="gamesContainer">
+                    <p class="text-center">Loading games...</p>
+                </div>
+                <nav>
+                    <ul class="pagination justify-content-center" id="pagination">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p>&copy; 2024 Gaming Platform. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 12;
+
+        async function loadGames(page = 1) {
+            try {
+                const genre = document.querySelector('input[name="genre"]:checked').value;
+                const sort = document.getElementById('sortSelect').value;
+                const search = document.getElementById('searchInput').value;
+
+                let url = `/api/games?page=${page}&per_page=${pageSize}`;
+                
+                if (genre) {
+                    url += `&genre=${genre}`;
+                }
+                
+                if (sort) {
+                    url += `&sort=${sort}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const container = document.getElementById('gamesContainer');
+                container.innerHTML = '';
+
+                if (data.games && data.games.length > 0) {
+                    let filteredGames = data.games;
+                    
+                    if (search) {
+                        filteredGames = filteredGames.filter(game => 
+                            game.title.toLowerCase().includes(search.toLowerCase()) ||
+                            (game.description && game.description.toLowerCase().includes(search.toLowerCase()))
+                        );
+                    }
+
+                    if (filteredGames.length === 0) {
+                        container.innerHTML = '<p class="col-12 text-center">No games found</p>';
+                        return;
+                    }
+
+                    filteredGames.forEach(game => {
+                        const gameCard = document.createElement('div');
+                        gameCard.className = 'col-md-4';
+                        gameCard.innerHTML = `
+                            <div class="game-card">
+                                <div class="game-image">🎮</div>
+                                <div class="game-info">
+                                    <div class="game-title">${game.title}</div>
+                                    <div class="rating">${'⭐'.repeat(Math.round(game.rating || 0))}</div>
+                                    <div class="game-price">$${game.price.toFixed(2)}</div>
+                                    <p class="text-muted small mt-2">${game.genre || 'General'}</p>
+                                    <button class="btn btn-primary btn-sm mt-2" onclick="viewGame(${game.id})">View Details</button>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(gameCard);
+                    });
+
+                    currentPage = page;
+                    updatePagination(data.pages, page);
+                } else {
+                    container.innerHTML = '<p class="text-center">No games available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading games:', error);
+                document.getElementById('gamesContainer').innerHTML = '<p class="text-center text-danger">Error loading games</p>';
+            }
+        }
+
+        function updatePagination(totalPages, currentPage) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            if (currentPage > 1) {
+                const prevItem = document.createElement('li');
+                prevItem.className = 'page-item';
+                prevItem.innerHTML = `<a class="page-link" href="#" onclick="loadGames(${currentPage - 1})">Previous</a>`;
+                pagination.appendChild(prevItem);
+            }
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageItem = document.createElement('li');
+                pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                pageItem.innerHTML = `<a class="page-link" href="#" onclick="loadGames(${i})">${i}</a>`;
+                pagination.appendChild(pageItem);
+            }
+
+            if (currentPage < totalPages) {
+                const nextItem = document.createElement('li');
+                nextItem.className = 'page-item';
+                nextItem.innerHTML = `<a class="page-link" href="#" onclick="loadGames(${currentPage + 1})">Next</a>`;
+                pagination.appendChild(nextItem);
+            }
+        }
+
+        function viewGame(gameId) {
+            window.location.href = `/game/${gameId}`;
+        }
+
+        document.getElementById('searchInput').addEventListener('keyup', () => loadGames(1));
+        document.querySelectorAll('input[name="genre"]').forEach(radio => {
+            radio.addEventListener('change', () => loadGames(1));
+        });
+        document.getElementById('sortSelect').addEventListener('change', () => loadGames(1));
+
+        loadGames();
+    </script>
+</body>
+</html>

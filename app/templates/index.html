@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaming Platform - Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .hero {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+        }
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        .game-card:hover {
+            transform: translateY(-10px);
+        }
+        .game-image {
+            background: #667eea;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+        .game-info {
+            padding: 20px;
+        }
+        .game-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .game-price {
+            font-size: 1.5rem;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .rating {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        .btn-primary {
+            background: #667eea;
+            border: none;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background: #764ba2;
+        }
+        .section {
+            padding: 60px 0;
+            background: white;
+            margin: 30px 0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">🎮 Gaming Platform</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/games">Browse Games</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">Register</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="container">
+            <h1>Welcome to Gaming Platform</h1>
+            <p>Discover, Play, and Share Amazing Games</p>
+            <a href="/games" class="btn btn-warning btn-lg">Browse Games</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h2 class="mb-4">Featured Games</h2>
+            <div class="row" id="featured-games">
+                <p class="text-center">Loading games...</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="mb-4">Popular This Week</h2>
+            <div class="row" id="popular-games">
+                <p class="text-center">Loading games...</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="mb-4">Latest Releases</h2>
+            <div class="row" id="recent-games">
+                <p class="text-center">Loading games...</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p>&copy; 2024 Gaming Platform. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadGames(containerId, limit = 6) {
+            try {
+                const response = await fetch('/api/games?per_page=' + limit);
+                const data = await response.json();
+                
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                
+                if (data.games && data.games.length > 0) {
+                    data.games.forEach(game => {
+                        const gameCard = document.createElement('div');
+                        gameCard.className = 'col-md-4 mb-4';
+                        gameCard.innerHTML = `
+                            <div class="game-card">
+                                <div class="game-image">🎮</div>
+                                <div class="game-info">
+                                    <div class="game-title">${game.title}</div>
+                                    <div class="rating">${'⭐'.repeat(Math.round(game.rating || 0))}</div>
+                                    <div class="game-price">$${game.price.toFixed(2)}</div>
+                                    <p class="text-muted small">${game.description ? game.description.substring(0, 50) + '...' : 'No description'}</p>
+                                    <button class="btn btn-primary btn-sm" onclick="viewGame(${game.id})">View Details</button>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(gameCard);
+                    });
+                } else {
+                    container.innerHTML = '<p class="text-center">No games available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading games:', error);
+                document.getElementById(containerId).innerHTML = '<p class="text-center text-danger">Error loading games</p>';
+            }
+        }
+
+        function viewGame(gameId) {
+            window.location.href = '/game/' + gameId;
+        }
+
+        loadGames('featured-games', 3);
+        loadGames('popular-games', 3);
+        loadGames('recent-games', 3);
+    </script>
+</body>
+</html>
