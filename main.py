@@ -10,7 +10,7 @@ load_dotenv()
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'app', 'templates'))
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gaming.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/gaming.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from app import db
@@ -68,8 +68,9 @@ def server_error(error):
     return jsonify({'error': 'Server error'}), 500
 
 if __name__ == '__main__':
-    print(f"Template folder: {app.template_folder}")
-    print(f"Template folder exists: {os.path.exists(app.template_folder)}")
-    if os.path.exists(app.template_folder):
-        print(f"Files in template folder: {os.listdir(app.template_folder)}")
-    app.run(debug=True, port=5000)
+    # Development
+    if os.environ.get('FLASK_ENV') == 'development':
+        app.run(debug=True, port=5000)
+    else:
+        # Production (App Engine)
+        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
